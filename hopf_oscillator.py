@@ -9,8 +9,8 @@ import torch
 class HopfOscillatorCfg:
     @dataclass
     class InitialStateCfg:
-        beta: tuple[float] = MISSING
-        """Default inter-oscillator phase offsets"""
+        beta: tuple[float] | list[float] = MISSING
+        """Initial per-oscillator phase"""
 
     init_state: InitialStateCfg = MISSING
     """Initial state configuration"""
@@ -25,7 +25,7 @@ class HopfOscillatorData:
     @dataclass
     class DefaultStateCfg:
         beta: torch.Tensor = MISSING
-        """Default inter-oscillator phase offsets"""
+        """Default per-oscillator phase"""
 
     default_state: DefaultStateCfg = MISSING
     """Default state configuration"""
@@ -257,6 +257,19 @@ class HopfOscillator:
         coupling_weight: torch.Tensor,
         dt: float,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Preprocess input and produce new oscillator state
+
+        Args:
+            r_cmd (torch.Tensor): oscillator magnitude modulation command
+            delta_theta_cmd (torch.Tensor): oscillator frequency modulation command
+            delta_theta_max (torch.Tensor): oscillator frequency upper bound
+            coupling_bias (torch.Tensor): coupling bias matrix
+            coupling_weight (torch.Tensor): coupling weight matrix
+            dt (float): time step
+
+        Returns:
+            tuple[torch.Tensor, torch.Tensor]: new oscillator magnitude and phase
+        """
         return self.step(
             r_cmd,
             delta_theta_cmd,
