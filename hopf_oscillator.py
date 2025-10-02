@@ -210,7 +210,7 @@ class HopfOscillator:
         coupling_bias: torch.Tensor,
         coupling_weight: torch.Tensor,
         dt: float,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> None:
         """Preprocess input and produce new oscillator state
 
         Args:
@@ -244,8 +244,6 @@ class HopfOscillator:
             self._data.delta_alpha,
             self._data.delta_beta,
         ) = delta_state_target
-
-        return self._data.r, self._data.theta
 
     # ---------- Dunder methods ----------
     def __call__(
