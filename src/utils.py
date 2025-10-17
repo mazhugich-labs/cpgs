@@ -17,8 +17,8 @@ def make_coupling_bias_matrix(alpha: torch.Tensor) -> torch.Tensor:
 @torch.jit.script
 def make_coupling_weight_matrix(
     coupling_bias: torch.Tensor,
-    self_coupling_weight: float = 1.0,
-    in_group_coupling_weight: float = 0.0,
+    self_coupling_weight: float = 0.0,
+    in_group_coupling_weight: float = 1.0,
     of_group_coupling_weight: float = 0.0,
     threshold: float = 1e-3,
 ) -> torch.Tensor:
@@ -26,8 +26,8 @@ def make_coupling_weight_matrix(
 
     Args:
         coupling_bias (torch.Tensor): coupling bias matrix
-        self_coupling_weight (float, optional): selg-coupling weight. Defaults to 1.0.
-        in_group_coupling_weight (float, optional): in-group coupling weight. Defaults to 0.0.
+        self_coupling_weight (float, optional): selg-coupling weight. Defaults to 0.0.
+        in_group_coupling_weight (float, optional): in-group coupling weight. Defaults to 1.0.
         of_group_coupling_weight (float, optional): off-group coupling weight. Defaults to 0.0.
         threshold (float, optional): difference threshold at which to count oscillators as a group. Defaults to 1e-3.
 
