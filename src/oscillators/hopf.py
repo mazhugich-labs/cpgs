@@ -64,13 +64,15 @@ class HopfOscillator(BaseOscillator):
     _cfg: HopfOscillatorCfg
     _data: HopfOscillatorData
 
-    def __init__(self, cfg: HopfOscillatorCfg, device: str) -> None:
+    def __init__(self, cfg: HopfOscillatorCfg, num_envs: int, device: str) -> None:
         self._cfg = cfg
 
-        default_beta = torch.tensor(self._cfg.init_state.beta, device=device)
+        default_beta = torch.tensor(self._cfg.init_state.beta, device=device).repeat(
+            num_envs, 1
+        )
         self._data = HopfOscillatorData(
             default_state=HopfOscillatorData.DefaultStateCfg(
-                beta=default_beta,
+                beta=default_beta[0],
             ),
             r=torch.zeros_like(default_beta),
             delta_r=torch.zeros_like(default_beta),
@@ -187,16 +189,16 @@ class HopfOscillator(BaseOscillator):
             ),
         )
 
-    def reset(self) -> None:
+    def reset(self, env_ids: list[int]) -> None:
         """Reset oscillator state to defaults"""
-        self._data.r[:] = 0.0
-        self._data.delta_r[:] = 0.0
-        self._data.v[:] = 0.0
-        self._data.delta_v[:] = 0.0
-        self._data.alpha[:] = 0.0
-        self._data.delta_alpha[:] = 0.0
-        self._data.beta[:] = self._data.default_state.beta[:]
-        self._data.delta_beta[:] = 0.0
+        self._data.r[env_ids] = 0.0
+        self._data.delta_r[env_ids] = 0.0
+        self._data.v[env_ids] = 0.0
+        self._data.delta_v[env_ids] = 0.0
+        self._data.alpha[env_ids] = 0.0
+        self._data.delta_alpha[env_ids] = 0.0
+        self._data.beta[env_ids] = self._data.default_state.beta
+        self._data.delta_beta[env_ids] = 0.0
 
     def step(
         self,
