@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass
+from typing import Sequence
 
 import torch
 
@@ -10,7 +11,7 @@ from .abc import BaseOscillatorCfg, BaseOscillatorData, BaseOscillator
 class HopfOscillatorCfg(BaseOscillatorCfg):
     @dataclass
     class InitialStateCfg(BaseOscillatorCfg.InitialStateCfg):
-        beta: tuple[float, ...]
+        beta: Sequence[float]
         """Initial per-oscillator phase"""
 
         def __post_init__(self):
@@ -64,7 +65,7 @@ class HopfOscillator(BaseOscillator):
     _cfg: HopfOscillatorCfg
     _data: HopfOscillatorData
 
-    def __init__(self, cfg: HopfOscillatorCfg, device: str) -> None:
+    def __init__(self, cfg: HopfOscillatorCfg, device: str):
         self._cfg = cfg
 
         default_beta = torch.tensor(self._cfg.init_state.beta, device=device)
@@ -78,7 +79,7 @@ class HopfOscillator(BaseOscillator):
             delta_v=torch.zeros_like(default_beta),
             alpha=torch.zeros_like(default_beta),
             delta_alpha=torch.zeros_like(default_beta),
-            beta=default_beta,
+            beta=default_beta.clone(),
             delta_beta=torch.zeros_like(default_beta),
         )
 
