@@ -26,7 +26,7 @@ where:
 
 import math
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Optional, Sequence, Tuple
 
 import torch
 
@@ -120,14 +120,16 @@ class HopfOscillator(BaseOscillator):
     _cfg: HopfOscillatorCfg
     _data: HopfOscillatorData
 
-    def __init__(self, cfg: HopfOscillatorCfg, device: str = "cpu"):
+    def __init__(self, cfg: HopfOscillatorCfg, num_envs: int = 1, device: str = "cpu"):
         """Initialize Hopf oscillator with given configuration"""
         self._cfg = cfg
 
-        default_beta = torch.tensor(self._cfg.init_state.beta, device=device)
+        default_beta = torch.tensor(self._cfg.init_state.beta, device=device).repeat(
+            num_envs, 1
+        )
         self._data = HopfOscillatorData(
             default_state=HopfOscillatorData.DefaultStateCfg(
-                beta=default_beta,
+                beta=default_beta[0],
             ),
             r=torch.zeros_like(default_beta),
             delta_r=torch.zeros_like(default_beta),
@@ -237,16 +239,19 @@ class HopfOscillator(BaseOscillator):
             ),
         )
 
-    def reset(self) -> None:
+    def reset(self, env_ids: Optional[Sequence[int]] = None) -> None:
         """Reset oscillator state to its default configuration"""
-        self._data.r[:] = 0.0
-        self._data.delta_r[:] = 0.0
-        self._data.v[:] = 0.0
-        self._data.delta_v[:] = 0.0
-        self._data.alpha[:] = 0.0
-        self._data.delta_alpha[:] = 0.0
-        self._data.beta[:] = self._data.default_state.beta[:]
-        self._data.delta_beta[:] = 0.0
+        if env_ids is None:
+            env_ids = range(self._data.r.shape[0])
+
+        self._data.r[env_ids] = 0.0
+        self._data.delta_r[env_ids] = 0.0
+        self._data.v[env_ids] = 0.0
+        self._data.delta_v[env_ids] = 0.0
+        self._data.alpha[env_ids] = 0.0
+        self._data.delta_alpha[env_ids] = 0.0
+        self._data.beta[env_ids] = self._data.default_state.beta[env_ids]
+        self._data.delta_beta[env_ids] = 0.0
 
     def step(
         self,
@@ -311,7 +316,7 @@ class HopfAdapterCfg(BaseAdapterCfg):
         delta_theta_min (float): Minimum allowed oscillator frequency.
     """
 
-    r_range: list[float, float] | tuple[float, float]
+    r_range: Tuple[float, float]
 
     delta_theta_min: float
 
@@ -338,7 +343,6 @@ class HopfAdapter(BaseAdapter):
             + (delta_theta - self._cfg.action_range[0])
             / (self._cfg.action_range[1] - self._cfg.action_range[0])
             * (delta_theta_max - self._cfg.delta_theta_min),
-            delta_theta_max,
         )
 
     def __call__(
@@ -352,6 +356,7 @@ class HopfAdapter(BaseAdapter):
         """Compute one oscillator update step from decoded control inputs"""
         return self._osc.step(
             *self._decode(r, delta_theta, delta_theta_max),
+            delta_theta_max,
             coupling_bias,
             coupling_weight
         )
