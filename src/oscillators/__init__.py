@@ -1,1 +1,1 @@
-from .hopf import HopfOscillatorCfg, HopfOscillator
+from .hopf import HopfOscillatorCfg, HopfOscillator, HopfAdapterCfg, HopfAdapter

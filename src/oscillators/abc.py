@@ -11,11 +11,13 @@ class BaseOscillatorCfg(ABC):
         pass
 
     init_state: InitialStateCfg
+    """Initial state configuration"""
 
     dt: float
+    """Update rate"""
 
     def __post__init__(self):
-        assert self.dt > 0, ""
+        assert self.dt > 0, "Update rate must be greater than 0"
 
 
 @dataclass
@@ -25,6 +27,7 @@ class BaseOscillatorData(ABC):
         pass
 
     default_state: DefaultStateCfg
+    """Default state configuration"""
 
 
 class BaseOscillator(ABC):
@@ -53,3 +56,32 @@ class BaseOscillator(ABC):
     @property
     def data(self) -> BaseOscillatorData:
         return self._data
+
+
+@dataclass
+class BaseAdapterCfg(ABC):
+    action_range: list[float, float] | tuple[float, float]
+    """Action/input range"""
+
+
+class BaseAdapter(ABC):
+    _cfg: BaseAdapterCfg
+    _osc: BaseOscillator
+
+    def __init__(self, cfg: BaseAdapterCfg, osc: BaseOscillator):
+        self._osc = osc
+        self._cfg = cfg
+
+    @abstractmethod
+    def _decode(self, *args, **kwargs) -> tuple[torch.Tensor, ...]: ...
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs) -> BaseOscillatorData: ...
+
+    @property
+    def cfg(self) -> BaseAdapterCfg:
+        return self._cfg
+
+    @property
+    def osc(self) -> BaseOscillator:
+        return self._osc
